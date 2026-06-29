@@ -129,9 +129,9 @@ GameObject:
   m_Component:
   - component: {fileID: 92843777}
   - component: {fileID: 92843779}
-  - component: {fileID: 92843778}
+  - component: {fileID: 92843780}
   m_Layer: 5
-  m_Name: Panel
+  m_Name: BoardView
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -156,24 +156,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &92843778
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 92843776}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7673c16cca622a142a71eabddd5548c4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BoardManager
-  boardSize: 15
-  slotSpacing: 0.1
-  slotSize: 0
-  slotPrefab: {fileID: 7731234657404748397, guid: 70ada5df0901b5841bd538ed54eaf823, type: 3}
-  board: {fileID: 92843777}
-  slots: []
 --- !u!222 &92843779
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -182,6 +164,68 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 92843776}
   m_CullTransparentMesh: 1
+--- !u!114 &92843780
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 92843776}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f7d7bd479b254de99dbcb58f95ac4d94, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BoardView
+  slotPrefab: {fileID: 7731234657404748397, guid: 70ada5df0901b5841bd538ed54eaf823, type: 3}
+  boardContainer: {fileID: 92843777}
+--- !u!1 &170816783
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 170816785}
+  - component: {fileID: 170816784}
+  m_Layer: 0
+  m_Name: GameManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &170816784
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 170816783}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2964030fd4784cf39cd84a8e8a2b0fec, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameManager
+  selectedMode: 0
+  boardSize: 15
+  boardView: {fileID: 92843780}
+  slotPrefab: {fileID: 7731234657404748397, guid: 70ada5df0901b5841bd538ed54eaf823, type: 3}
+--- !u!4 &170816785
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 170816783}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 672.22955, y: 464.69705, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &302396115
 GameObject:
   m_ObjectHideFlags: 0
@@ -685,3 +729,4 @@ SceneRoots:
   - {fileID: 832575519}
   - {fileID: 302396119}
   - {fileID: 1352541494}
+  - {fileID: 170816785}
