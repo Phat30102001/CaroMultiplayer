@@ -1,4 +1,4 @@
-﻿// File: GameOrchestrator.cs (Fully Compatible with Online/Offline)
+﻿// File: GameOrchestrator.cs (Fully Adaptive for Rematching)
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -19,20 +19,15 @@ public class GameOrchestrator : MonoBehaviour
     private List<IPlayerController> _players;
     private int _currentPlayerIndex;
     private bool _isGameActive = true;
-    
-    private CellState _localPlayerSign; // Tracking the local player identity in online matches
+    private CellState _localPlayerSign;
 
     private void Start()
     {
-        // Core systems initialization
-        _gameBoard = new GameBoard(boardSize);
         _winChecker = new EndGameCheckingManager();
-        _gameBoard.OnCellChanged += boardView.UpdateSlotVisual;
 
         float slotSize = slotPrefab.GetComponent<RectTransform>().sizeDelta.x;
         boardView.GenerateBoard(boardSize, slotSize);
 
-        // If playing offline, startup instantly. If online, wait for network initialization.
         if (selectedMode == GameMode.OfflineLocal)
         {
             SetupOfflineMode();
@@ -42,33 +37,52 @@ public class GameOrchestrator : MonoBehaviour
 
     private void SetupOfflineMode()
     {
+        // Safe unsubscribe if re-initializing
+        if (_gameBoard != null) _gameBoard.OnCellChanged -= boardView.UpdateSlotVisual;
+
+        _gameBoard = new GameBoard(boardSize);
+        _gameBoard.OnCellChanged += boardView.UpdateSlotVisual;
+        boardView.ResetAllSlots();
+
         _players = new List<IPlayerController>
         {
             new LocalPlayerController(CellState.X, boardView),
             new LocalPlayerController(CellState.O, boardView)
         };
         _currentPlayerIndex = 0;
+        _isGameActive = true;
     }
 
-    /// <summary>
-    /// Invoked by NetworkCaroManager once network roles are randomly distributed.
-    /// </summary>
     public void InitNetworkMatch(CellState assignedLocalSign)
     {
+        // 1. Clean data tracking and unbind from old board event instances to prevent memory bloating
+        if (_gameBoard != null)
+        {
+            _gameBoard.OnCellChanged -= boardView.UpdateSlotVisual;
+        }
+
+        // 2. Instantiate a fresh model layer matrix data
+        _gameBoard = new GameBoard(boardSize);
+        _gameBoard.OnCellChanged += boardView.UpdateSlotVisual;
+
+        // 3. Command the UI View layer to wipe out the old icons
+        boardView.ResetAllSlots();
+
+        // 4. Update orchestrator state flags
         _localPlayerSign = assignedLocalSign;
+        _isGameActive = true;
         _players = new List<IPlayerController>();
 
-        // Order matters: X always occupies index 0 and moves first.
-        // We inject controllers dynamically based on who scored the X sign.
+        // 5. Inject controllers based on who scored the X sign randomly
         if (_localPlayerSign == CellState.X)
         {
-            _players.Add(new LocalPlayerController(CellState.X, boardView)); // Me (Goes first)
-            _players.Add(new NetworkPlayerController(CellState.O));        // Opponent
+            _players.Add(new LocalPlayerController(CellState.X, boardView));
+            _players.Add(new NetworkPlayerController(CellState.O));
         }
         else
         {
-            _players.Add(new NetworkPlayerController(CellState.X));        // Opponent (Goes first)
-            _players.Add(new LocalPlayerController(CellState.O, boardView)); // Me
+            _players.Add(new NetworkPlayerController(CellState.X));
+            _players.Add(new LocalPlayerController(CellState.O, boardView));
         }
 
         _currentPlayerIndex = 0;
@@ -80,31 +94,25 @@ public class GameOrchestrator : MonoBehaviour
         if (!_isGameActive) return;
 
         IPlayerController activePlayer = _players[_currentPlayerIndex];
-        
         activePlayer.RequestMove(_gameBoard, (coords) =>
         {
-            // Execute locally if it's valid data
             ExecuteMove(coords, activePlayer.Sign);
         });
     }
-
-    // Inside File: GameOrchestrator.cs -> ExecuteMove method
 
     private void ExecuteMove(Vector2Int coords, CellState sign)
     {
         if (_gameBoard.SetCell(coords.x, coords.y, sign))
         {
-            // IF ONLINE: If the move belongs to the LOCAL user, send it to the global network manager
             if (selectedMode == GameMode.OnlineMatch && sign == _localPlayerSign)
             {
-                // Fixed naming to match the strict In-Scene Singleton
                 NetworkGameManager.Instance.BroadcastMoveServerRpc(coords, sign);
             }
 
             if (_winChecker.CheckWin(_gameBoard, coords, sign))
             {
-                Debug.Log($"GAME OVER! Player {sign} has WON!");
                 _isGameActive = false;
+                HandleGameEnd(sign);
                 return;
             }
 
@@ -117,12 +125,28 @@ public class GameOrchestrator : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Triggered via ClientRpc when move coordinates arrive from the network.
-    /// </summary>
+    private void HandleGameEnd(CellState winnerSign)
+    {
+        Debug.Log($"[GameOrchestrator] Player {winnerSign} has won the match.");
+
+        if (selectedMode == GameMode.OnlineMatch)
+        {
+            // Determine text message for the local player
+            string message = (winnerSign == _localPlayerSign) ? "YOU WIN!" : "YOU LOSE!";
+            
+            // Pop up the consensus UI panel
+            RematchPanelUI.Instance.ShowPanel(message);
+        }
+        else
+        {
+            // Offline fallback
+            SetupOfflineMode();
+            StartNextTurn();
+        }
+    }
+
     public void OnReceiveNetworkMove(Vector2Int coords, CellState sign)
     {
-        // Filter out our own mirrored moves since they've already been executed locally
         if (selectedMode == GameMode.OnlineMatch && sign != _localPlayerSign)
         {
             if (_players[_currentPlayerIndex] is NetworkPlayerController networkPlayer)

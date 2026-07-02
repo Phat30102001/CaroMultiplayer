@@ -5,13 +5,20 @@ using UnityEngine.UI;
 
 public class NetworkMenuUI : MonoBehaviour
 {
+    public static NetworkMenuUI Instance { get; private set; }
+
     [SerializeField] private Button hostButton;
     [SerializeField] private Button joinButton;
     [SerializeField] private GameObject uiPanel;
 
+    private void Awake()
+    {
+        if (Instance == null) Instance = this;
+        else Destroy(gameObject);
+    }
+
     private void Start()
     {
-        // Bind UI buttons to Unity Netcode actions
         hostButton.onClick.AddListener(() =>
         {
             NetworkManager.Singleton.StartHost();
@@ -23,6 +30,11 @@ public class NetworkMenuUI : MonoBehaviour
             NetworkManager.Singleton.StartClient();
             HideUi();
         });
+    }
+
+    public void ShowUi()
+    {
+        if (uiPanel != null) uiPanel.SetActive(true);
     }
 
     private void HideUi()

@@ -43,4 +43,14 @@ public class BoardView : MonoBehaviour
             slot.UpdateVisual(state);
         }
     }
+    // Inside File: BoardView.cs
+
+    public void ResetAllSlots()
+    {
+        // Loop through all generated slots and wipe their visual states clean
+        foreach (Slot slot in _slotsMap.Values)
+        {
+            slot.UpdateVisual(CellState.Empty);
+        }
+    }
 }
