@@ -11,6 +11,8 @@ public interface IPlayerController
 // 1. LOCAL PLAYER (Mouse clicks on this device)
 
 // 2. NETWORK PLAYER (Wait for move data sent from the network)
+// File: PlayerControllers.cs (Updated Network Portion)
+
 public class NetworkPlayerController : IPlayerController
 {
     public CellState Sign { get; }
@@ -23,11 +25,11 @@ public class NetworkPlayerController : IPlayerController
 
     public void RequestMove(GameBoard board, Action<Vector2Int> onMoveCalculated)
     {
-        // Do nothing here because the opponent does not click on this device. Just wait...
+        // Pause and hold the callback until the data packet arrives from across the network
         _pendingMoveCallback = onMoveCalculated;
     }
 
-    // This method will be called from your Network Manager script when a packet arrives
+    // Triggered when NetworkCaroManager receives a verified move from the opponent
     public void ReceiveMoveFromNetwork(Vector2Int coords)
     {
         _pendingMoveCallback?.Invoke(coords);
